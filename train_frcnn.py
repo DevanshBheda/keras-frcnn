@@ -6,6 +6,8 @@ import time
 import numpy as np
 from optparse import OptionParser
 import pickle
+import os
+import pandas as pd
 
 from keras import backend as K
 from keras.optimizers import Adam, SGD, RMSprop
@@ -15,7 +17,7 @@ from keras_frcnn import config, data_generators
 from keras_frcnn import losses as losses
 import keras_frcnn.roi_helpers as roi_helpers
 from keras.utils import generic_utils
-import pdb
+
 sys.setrecursionlimit(40000)
 
 parser = OptionParser()
@@ -35,6 +37,7 @@ parser.add_option("--config_filename", dest="config_filename", help=
 				default="config.pickle")
 parser.add_option("--output_weight_path", dest="output_weight_path", help="Output path for weights.", default='./model_frcnn.hdf5')
 parser.add_option("--input_weight_path", dest="input_weight_path", help="Input path for weights. If not specified, will try to load default weights provided by keras.")
+parser.add_option("--record_path", dest="record_path", help="Input path for record of accuracy and losses for training", default='record.csv')
 
 (options, args) = parser.parse_args()
 
@@ -57,6 +60,7 @@ C.rot_90 = bool(options.rot_90)
 
 C.model_path = options.output_weight_path
 C.num_rois = int(options.num_rois)
+C.record_path = options.record_path
 
 if options.network == 'vgg':
 	C.network = 'vgg'
@@ -119,7 +123,7 @@ img_input = Input(shape=input_shape_img)
 roi_input = Input(shape=(None, 4))
 
 # define the base network (resnet here, can be VGG, Inception, etc)
-shared_layers = nn.nn_base(img_input, trainable=True)
+shared_layers = nn.nn_base(img_input, trainable=False)
 
 # define the RPN, built on the base layers
 num_anchors = len(C.anchor_box_scales) * len(C.anchor_box_ratios)
@@ -132,14 +136,37 @@ model_rpn = Model(img_input, rpn[:2])
 
 # this is a model that holds both the RPN and the classifier, used to load/save weights for the models
 # model_all = Model([img_input, roi_input], rpn[:2] + classifier)
+if not os.path.isfile(C.model_path):
+	try:
+		print('loading weights from {}'.format(C.base_net_weights))
+		model_rpn.load_weights(C.base_net_weights, by_name=True)
+		# model_classifier.load_weights(C.base_net_weights, by_name=True)
+	except:
+		print('Could not load pretrained model weights. Weights can be found in the keras application folder \
+			https://github.com/fchollet/keras/tree/master/keras/applications')
 
-try:
-	print('loading weights from {}'.format(C.base_net_weights))
-	model_rpn.load_weights(C.base_net_weights, by_name=True)
-	# model_classifier.load_weights(C.base_net_weights, by_name=True)
-except:
-	print('Could not load pretrained model weights. Weights can be found in the keras application folder \
-		https://github.com/fchollet/keras/tree/master/keras/applications')
+	record_df = pd.DataFrame(
+		columns=['mean_overlapping_bboxes', 'loss_rpn_cls', 'loss_rpn_regr', 'elapsed_time', 'mAP'])
+else:
+	# If this is a continued training, load the trained model from before
+	print('Continue training based on previous trained model')
+	print('Loading weights from {}'.format(C.model_path))
+	model_rpn.load_weights(C.model_path, by_name=True)
+
+	# Load the records
+	record_df = pd.read_csv(C.record_path)
+
+	r_mean_overlapping_bboxes = record_df['mean_overlapping_bboxes']
+	# r_class_acc = record_df['class_acc']
+	r_loss_rpn_cls = record_df['loss_rpn_cls']
+	r_loss_rpn_regr = record_df['loss_rpn_regr']
+	# r_loss_class_cls = record_df['loss_class_cls']
+	# r_loss_class_regr = record_df['loss_class_regr']
+	# r_curr_loss = record_df['curr_loss']
+	r_elapsed_time = record_df['elapsed_time']
+	r_mAP = record_df['mAP']
+
+	print('Already train %dK batches' % (len(record_df)))
 
 optimizer = Adam(lr=1e-5)
 optimizer_classifier = Adam(lr=1e-5)
@@ -267,6 +294,7 @@ for epoch_num in range(num_epochs):
 					# print('Loss Detector classifier: {}'.format(loss_class_cls))
 					# print('Loss Detector regression: {}'.format(loss_class_regr))
 					print('Elapsed time: {}'.format(time.time() - start_time))
+					elapsed_time = (time.time() - start_time) / 60
 
 				# curr_loss = loss_rpn_cls + loss_rpn_regr + loss_class_cls + loss_class_regr
 				curr_loss = loss_rpn_cls + loss_rpn_regr
@@ -279,6 +307,16 @@ for epoch_num in range(num_epochs):
 					best_loss = curr_loss
 					# model_all.save_weights(C.model_path)
 					model_rpn.save_weights(C.model_path)
+
+				new_row = {'mean_overlapping_bboxes': round(mean_overlapping_bboxes, 3),
+						   'loss_rpn_cls': round(loss_rpn_cls, 3),
+						   'loss_rpn_regr': round(loss_rpn_regr, 3),
+						   'curr_loss': round(curr_loss, 3),
+						   'elapsed_time': round(elapsed_time, 3),
+						   'mAP': 0}
+
+				record_df = record_df.append(new_row, ignore_index=True)
+				record_df.to_csv(C.record_path, index=0)
 
 				break
 
