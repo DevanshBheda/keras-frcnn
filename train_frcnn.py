@@ -278,7 +278,7 @@ for epoch_num in range(num_epochs):
 			iter_num += 1
 
 			if iter_num == epoch_length:
-				model_rpn.save_weights(os.path.join(C.model_save_dir),'model_{}.hdf5'.format(epoch_num))
+				model_rpn.save_weights(os.path.join(C.model_save_dir,'model_{}.hdf5'.format(epoch_num)))
 
 				loss_rpn_cls = np.mean(losses[:, 0])
 				loss_rpn_regr = np.mean(losses[:, 1])
