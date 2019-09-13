@@ -38,7 +38,7 @@ parser.add_option("--config_filename", dest="config_filename", help=
 parser.add_option("--output_weight_path", dest="output_weight_path", help="Output path for weights.", default='./model_frcnn.hdf5')
 parser.add_option("--input_weight_path", dest="input_weight_path", help="Input path for weights. If not specified, will try to load default weights provided by keras.")
 parser.add_option("--record_path", dest="record_path", help="Input path for record of accuracy and losses for training", default='record.csv')
-
+# parser.add_option()
 (options, args) = parser.parse_args()
 
 if not options.train_path:   # if filename is not given
@@ -71,7 +71,8 @@ elif options.network == 'resnet50':
 else:
 	print('Not a valid model')
 	raise ValueError
-
+if not os.path.exists(C.model_save_dir):
+	os.mkdir(C.model_save_dir)
 
 # check if weight path was passed via command line
 if options.input_weight_path:
@@ -277,6 +278,8 @@ for epoch_num in range(num_epochs):
 			iter_num += 1
 
 			if iter_num == epoch_length:
+				model_rpn.save_weights(os.path.join(C.model_save_dir),'model_{}.hdf5'.format(epoch_num))
+
 				loss_rpn_cls = np.mean(losses[:, 0])
 				loss_rpn_regr = np.mean(losses[:, 1])
 				# loss_class_cls = np.mean(losses[:, 2])
