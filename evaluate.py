@@ -166,8 +166,8 @@ if __name__ == '__main__':
     parser.add_argument("--images_folder_path")
     parser.add_argument("--gt_bbox_dict_path")
     parser.add_argument("--output_folder_path")
-    parser.add_argument("--iou_threshold", type = int)
-    parser.add_argument("--max_bboxes", type = int)
+    parser.add_argument("--iou_threshold", type = float)
+    parser.add_argument("--max_bboxes", type = float)
     args = parser.parse_args()
 
     model_path = args.model_path
