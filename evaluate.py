@@ -112,7 +112,7 @@ def get_metrics(gt, preds, threshold=0.2):
 
 def predict(img_path, model, C, max_boxes=100):
     img = cv2.imread(img_path)
-
+    name = img_path.split("/")[-1]
     X, ratio = format_img(img, C)
     X = np.transpose(X, (0, 2, 3, 1))
 
@@ -123,13 +123,17 @@ def predict(img_path, model, C, max_boxes=100):
     predictions = []
     pred_img = img.copy()
     #     plt.figure(figsize=(8,8))
+
+    bbox_img_path = os.path.join("/home/devansh/X4/uhuru_data/BoundingBoxesImages", name)
+    bbox_img = cv2.imread(bbox_img_path)
     for pos in R:
         predictions.append(((pos[0], pos[1]), (pos[2], pos[3])))
-        cv2.rectangle(pred_img, (pos[0], pos[1]), (pos[2], pos[3]), (0, 0, 255), 2)
+        cv2.rectangle(bbox_img, (pos[0], pos[1]), (pos[2], pos[3]), (0, 0, 255), 2)
+
     #     plt.grid()
     #     plt.imshow(pred_img)
     #     plt.show()
-    return pred_img, predictions
+    return pred_img, bbox_img
 
 def evaluate_model(model, config, gt_images_dict, eval_images_list, images_folder_path, output_folder_path,
                    threshold=0.3, model_type="keras_frcnn", max_boxes=100):
@@ -142,6 +146,7 @@ def evaluate_model(model, config, gt_images_dict, eval_images_list, images_folde
             img_path = os.path.join(images_folder_path, img)
             pred_img, predictions = predict(img_path, model, config, max_boxes)
             pred_images_dict[img] = predictions
+            cv2.imwrite("/home/devansh/uhuru/test_imgs/{}".format(img))
         except Exception as e:
             print("Issue with ", img)
             print(e)
