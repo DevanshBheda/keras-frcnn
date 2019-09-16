@@ -136,11 +136,15 @@ def evaluate_model(model, config, gt_images_dict, eval_images_list, images_folde
     pred_images_dict = {}
     print("IOU threshold is: ", threshold)
     print("Max boxes is: ", max_boxes)
-    for img in eval_images_list:
-        img_path = os.path.join(images_folder_path, img)
 
-        pred_img, predictions = predict(img_path, model, config, max_boxes)
-        pred_images_dict[img] = predictions
+    for img in eval_images_list:
+        try:
+            img_path = os.path.join(images_folder_path, img)
+            pred_img, predictions = predict(img_path, model, config, max_boxes)
+            pred_images_dict[img] = predictions
+        except Exception as e:
+            print("Issue with ", img)
+            print(e)
 
     if not os.path.isdir(output_folder_path):
         os.mkdir(output_folder_path)
