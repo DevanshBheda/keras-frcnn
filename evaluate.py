@@ -136,23 +136,23 @@ def evaluate_model(model, config, gt_images_dict, eval_images_list, images_folde
     pred_images_dict = {}
     print("IOU threshold is: ", threshold)
     print("Max boxes is: ", max_boxes)
-    # for img in eval_images_list:
-    #     try:
-    #         img_path = os.path.join(images_folder_path, img)
-    #         pred_img, predictions = predict(img_path, model, config, max_boxes)
-    #         pred_images_dict[img] = predictions
-    #     except Exception as e:
-    #         print("Issue with ", img)
-    #         print(e)
-    #
-    # if not os.path.isdir(output_folder_path):
-    #     os.mkdir(output_folder_path)
-    #
-    # with open(os.path.join(output_folder_path, "predictions_{}boxes.pkl".format(max_boxes)), "wb") as f:
-    #     pickle.dump(pred_images_dict, f)
+    for img in eval_images_list:
+        try:
+            img_path = os.path.join(images_folder_path, img)
+            pred_img, predictions = predict(img_path, model, config, max_boxes)
+            pred_images_dict[img] = predictions
+        except Exception as e:
+            print("Issue with ", img)
+            print(e)
 
-    with open(os.path.join(output_folder_path, "predictions_{}boxes.pkl".format(max_boxes)), "rb") as f:
-        pred_images_dict = pickle.load(f)
+    if not os.path.isdir(output_folder_path):
+        os.mkdir(output_folder_path)
+
+    with open(os.path.join(output_folder_path, "predictions_{}boxes.pkl".format(max_boxes)), "wb") as f:
+        pickle.dump(pred_images_dict, f)
+
+    # with open(os.path.join(output_folder_path, "predictions_{}boxes.pkl".format(max_boxes)), "rb") as f:
+    #     pred_images_dict = pickle.load(f)
 
     tp, fp, fn, precision, recall, f_score = get_metrics(gt_images_dict, pred_images_dict, threshold=threshold)
 
