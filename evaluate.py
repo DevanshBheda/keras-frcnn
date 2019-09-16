@@ -146,7 +146,7 @@ def evaluate_model(model, config, gt_images_dict, eval_images_list, images_folde
             img_path = os.path.join(images_folder_path, img)
             pred_img, predictions = predict(img_path, model, config, max_boxes)
             pred_images_dict[img] = predictions
-            cv2.imwrite("/home/devansh/uhuru/test_imgs/{}".format(img))
+            cv2.imwrite("/home/devansh/uhuru/test/{}".format(img), pred_img)
         except Exception as e:
             print("Issue with ", img)
             print(e)
