@@ -14,7 +14,7 @@ from keras_frcnn.data_generators import *
 from keras_frcnn.roi_helpers import *
 
 import argparse
-
+import time
 
 def format_img_size(img, C):
     """ formats the image size based on config """
@@ -134,7 +134,8 @@ def predict(img_path, model, C, max_boxes=100):
 def evaluate_model(model, config, gt_images_dict, eval_images_list, images_folder_path, output_folder_path,
                    threshold=0.3, model_type="keras_frcnn", max_boxes=100):
     pred_images_dict = {}
-
+    print("IOU threshold is: ", threshold)
+    print("Max boxes is: ", max_boxes)
     for img in eval_images_list:
         img_path = os.path.join(images_folder_path, img)
 
@@ -167,7 +168,7 @@ if __name__ == '__main__':
     parser.add_argument("--gt_bbox_dict_path")
     parser.add_argument("--output_folder_path")
     parser.add_argument("--iou_threshold", type = float)
-    parser.add_argument("--max_bboxes", type = float)
+    parser.add_argument("--max_bboxes", type = int)
     args = parser.parse_args()
 
     model_path = args.model_path
@@ -209,18 +210,21 @@ if __name__ == '__main__':
     # model_classifier = Model([feature_map_input, roi_input], classifier)
     print('Loading weights from {}'.format(model_path))
     model_rpn.load_weights(model_path, by_name=True)
+    print("Weights loaded")
     # model_classifier.load_weights(C.model_path, by_name=True)
 
     model_rpn.compile(optimizer='sgd', loss='mse')
-
-    with open("/home/devansh/X4/uhuru_data/eval.txt") as i:
+    print("Getting the list of eval files")
+    with open(eval_files_list_path) as i:
         lines = i.read()
         eval_files = lines.split("\n")
 
     with open(bbox_dict_path, "rb") as f:
         bbox_coords_dict = pickle.load(f)
-
+    print("Running the main function")
+    st = time.time()
     result = evaluate_model(model_rpn, C, bbox_coords_dict, eval_files,
-                            images_folder_path, output_folder_path, iou_threshold, max_bboxes)
-
+                            images_folder_path, output_folder_path, threshold=iou_threshold, max_boxes=max_bboxes)
     print(result)
+    print("Time taken: ", time.time() - st)
+    #print(result)
