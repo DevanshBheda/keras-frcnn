@@ -220,7 +220,7 @@ if __name__ == '__main__':
     with open(bbox_dict_path, "rb") as f:
         bbox_coords_dict = pickle.load(f)
 
-    result = evaluate_model(model_path, C, bbox_coords_dict, eval_files,
+    result = evaluate_model(model_rpn, C, bbox_coords_dict, eval_files,
                             images_folder_path, output_folder_path, iou_threshold, max_bboxes)
 
     print(result)
