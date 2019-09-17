@@ -190,12 +190,12 @@ def nn_base(input_tensor=None, trainable=False):
     x = identity_block(x, 3, [128, 128, 512], stage=3, block='c', trainable = trainable)
     x = identity_block(x, 3, [128, 128, 512], stage=3, block='d', trainable = trainable)
 
-    x = conv_block(x, 3, [256, 256, 1024], stage=4, block='a', trainable = trainable)
-    x = identity_block(x, 3, [256, 256, 1024], stage=4, block='b', trainable = trainable)
-    x = identity_block(x, 3, [256, 256, 1024], stage=4, block='c', trainable = trainable)
-    x = identity_block(x, 3, [256, 256, 1024], stage=4, block='d', trainable = trainable)
-    x = identity_block(x, 3, [256, 256, 1024], stage=4, block='e', trainable = trainable)
-    x = identity_block(x, 3, [256, 256, 1024], stage=4, block='f', trainable = trainable)
+    x = conv_block(x, 3, [256, 256, 1024], stage=4, block='a', trainable = True)
+    x = identity_block(x, 3, [256, 256, 1024], stage=4, block='b', trainable = True)
+    x = identity_block(x, 3, [256, 256, 1024], stage=4, block='c', trainable = True)
+    x = identity_block(x, 3, [256, 256, 1024], stage=4, block='d', trainable = True)
+    x = identity_block(x, 3, [256, 256, 1024], stage=4, block='e', trainable = True)
+    x = identity_block(x, 3, [256, 256, 1024], stage=4, block='f', trainable = True)
 
     return x
 
