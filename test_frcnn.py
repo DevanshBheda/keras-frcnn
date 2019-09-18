@@ -50,18 +50,10 @@ img_path = options.test_path
 def format_img_size(img, C):
 	""" formats the image size based on config """
 	img_min_side = float(C.im_size)
-	(height,width,_) = img.shape
-		
-	if width <= height:
-		ratio = img_min_side/width
-		new_height = int(ratio * height)
-		new_width = int(img_min_side)
-	else:
-		ratio = img_min_side/height
-		new_width = int(ratio * width)
-		new_height = int(img_min_side)
-	img = cv2.resize(img, (new_width, new_height), interpolation=cv2.INTER_CUBIC)
-	return img, ratio	
+	(height, width, _) = img.shape
+	ratio = 1
+
+	return img, ratio
 
 def format_img_channels(img, C):
 	""" formats the image channels based on config """
@@ -150,7 +142,7 @@ visualise = True
 for idx, img_name in enumerate(sorted(os.listdir(img_path))):
 	if not img_name.lower().endswith(('.bmp', '.jpeg', '.jpg', '.png', '.tif', '.tiff')):
 		continue
-	print(img_name)
+	# print(img_name)
 	st = time.time()
 	filepath = os.path.join(img_path,img_name)
 
@@ -242,6 +234,6 @@ for idx, img_name in enumerate(sorted(os.listdir(img_path))):
 
 	print('Elapsed time = {}'.format(time.time() - st))
 	print(all_dets)
-	cv2.imshow('img', img)
-	cv2.waitKey(0)
-	# cv2.imwrite('./results_imgs/{}.png'.format(idx),img)
+	# cv2.imshow('img', img)
+	# cv2.waitKey(0)
+	cv2.imwrite('./results_imgs/{}'.format(img_name),img)
