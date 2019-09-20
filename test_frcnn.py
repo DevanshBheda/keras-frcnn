@@ -284,7 +284,7 @@ if eval_files_list_path:
 																					 fn)
 	print(result)
 
-	with open(os.path.join(output_dir, "results.txt", "w")) as f:
+	with open(os.path.join(output_dir, "results.txt"), "w") as f:
 		f.write(result)
 
 # print('Elapsed time = {}'.format(time.time() - st))
