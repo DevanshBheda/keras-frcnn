@@ -38,7 +38,7 @@ config_output_filename = options.config_filename
 
 eval_files_list_path = options.eval_file_path
 output_dir = options.output_dir
-bbox_dict_path = args.gt_bbox_dict_path
+bbox_dict_path = options.gt_bbox_dict_path
 
 with open(config_output_filename, 'rb') as f_in:
 	C = pickle.load(f_in)
@@ -243,13 +243,13 @@ for idx, img_name in enumerate(img_names):
 			except:
 				predictions_dict[img_name] = [((real_x1, real_y1), (real_x2, real_y2))]
 
-			cv2.rectangle(img,(real_x1, real_y1), (real_x2, real_y2), (int(class_to_color[key][0]), int(class_to_color[key][1]), int(class_to_color[key][2])),2)
-
-			textLabel = '{}: {}'.format(key,int(100*new_probs[jk]))
-			all_dets.append((key,100*new_probs[jk]))
-
-			(retval,baseLine) = cv2.getTextSize(textLabel,cv2.FONT_HERSHEY_COMPLEX,1,1)
-			textOrg = (real_x1, real_y1-0)
+			# cv2.rectangle(img,(real_x1, real_y1), (real_x2, real_y2), (int(class_to_color[key][0]), int(class_to_color[key][1]), int(class_to_color[key][2])),2)
+			#
+			# textLabel = '{}: {}'.format(key,int(100*new_probs[jk]))
+			# all_dets.append((key,100*new_probs[jk]))
+			#
+			# (retval,baseLine) = cv2.getTextSize(textLabel,cv2.FONT_HERSHEY_COMPLEX,1,1)
+			# textOrg = (real_x1, real_y1-0)
 
 			# cv2.rectangle(img, (textOrg[0] - 5, textOrg[1]+baseLine - 5), (textOrg[0]+retval[0] + 5, textOrg[1]-retval[1] - 5), (0, 0, 0), 2)
 			# cv2.rectangle(img, (textOrg[0] - 5,textOrg[1]+baseLine - 5), (textOrg[0]+retval[0] + 5, textOrg[1]-retval[1] - 5), (255, 255, 255), -1)
