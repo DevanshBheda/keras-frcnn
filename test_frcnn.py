@@ -11,6 +11,7 @@ from keras import backend as K
 from keras.layers import Input
 from keras.models import Model
 from keras_frcnn import roi_helpers
+from evaluate import get_metrics
 
 sys.setrecursionlimit(40000)
 
@@ -23,6 +24,9 @@ parser.add_option("--config_filename", dest="config_filename", help=
 				"Location to read the metadata related to the training (generated when training).",
 				default="config.pickle")
 parser.add_option("--network", dest="network", help="Base network to use. Supports vgg or resnet50.", default='resnet50')
+parser.add_option("--eval_file_path", help = "path for the list of eval images", default = "")
+parser.add_option("--output_dir", help = "Directory containing the output")
+parser.add_option("--gt_bbox_dict_path")
 
 (options, args) = parser.parse_args()
 
@@ -31,6 +35,10 @@ if not options.test_path:   # if filename is not given
 
 
 config_output_filename = options.config_filename
+
+eval_files_list_path = options.eval_file_path
+output_dir = options.output_dir
+bbox_dict_path = args.gt_bbox_dict_path
 
 with open(config_output_filename, 'rb') as f_in:
 	C = pickle.load(f_in)
@@ -82,6 +90,7 @@ def get_real_coordinates(ratio, x1, y1, x2, y2):
 	real_y2 = int(round(y2 // ratio))
 
 	return (real_x1, real_y1, real_x2 ,real_y2)
+
 
 class_mapping = C.class_mapping
 
@@ -139,7 +148,16 @@ bbox_threshold = 0.8
 
 visualise = True
 
-for idx, img_name in enumerate(sorted(os.listdir(img_path))):
+if eval_files_list_path:
+	with open(eval_files_list_path) as i:
+		lines = i.read()
+		img_names = lines.split("\n")
+else:
+	img_names = sorted(os.listdir(img_path))
+
+predictions_dict = {}
+
+for idx, img_name in enumerate(img_names):
 	if not img_name.lower().endswith(('.bmp', '.jpeg', '.jpg', '.png', '.tif', '.tiff')):
 		continue
 	# print(img_name)
@@ -220,6 +238,11 @@ for idx, img_name in enumerate(sorted(os.listdir(img_path))):
 
 			(real_x1, real_y1, real_x2, real_y2) = get_real_coordinates(ratio, x1, y1, x2, y2)
 
+			try:
+				predictions_dict[img_name].append(((real_x1, real_y1), (real_x2, real_y2)))
+			except:
+				predictions_dict[img_name] = [((real_x1, real_y1), (real_x2, real_y2))]
+
 			cv2.rectangle(img,(real_x1, real_y1), (real_x2, real_y2), (int(class_to_color[key][0]), int(class_to_color[key][1]), int(class_to_color[key][2])),2)
 
 			textLabel = '{}: {}'.format(key,int(100*new_probs[jk]))
@@ -228,12 +251,29 @@ for idx, img_name in enumerate(sorted(os.listdir(img_path))):
 			(retval,baseLine) = cv2.getTextSize(textLabel,cv2.FONT_HERSHEY_COMPLEX,1,1)
 			textOrg = (real_x1, real_y1-0)
 
-			cv2.rectangle(img, (textOrg[0] - 5, textOrg[1]+baseLine - 5), (textOrg[0]+retval[0] + 5, textOrg[1]-retval[1] - 5), (0, 0, 0), 2)
-			cv2.rectangle(img, (textOrg[0] - 5,textOrg[1]+baseLine - 5), (textOrg[0]+retval[0] + 5, textOrg[1]-retval[1] - 5), (255, 255, 255), -1)
-			cv2.putText(img, textLabel, textOrg, cv2.FONT_HERSHEY_DUPLEX, 1, (0, 0, 0), 1)
-
-	print('Elapsed time = {}'.format(time.time() - st))
-	print(all_dets)
+			# cv2.rectangle(img, (textOrg[0] - 5, textOrg[1]+baseLine - 5), (textOrg[0]+retval[0] + 5, textOrg[1]-retval[1] - 5), (0, 0, 0), 2)
+			# cv2.rectangle(img, (textOrg[0] - 5,textOrg[1]+baseLine - 5), (textOrg[0]+retval[0] + 5, textOrg[1]-retval[1] - 5), (255, 255, 255), -1)
+			# cv2.putText(img, textLabel, textOrg, cv2.FONT_HERSHEY_DUPLEX, 1, (0, 0, 0), 1)
+	#
+	# print(all_dets)
 	# cv2.imshow('img', img)
 	# cv2.waitKey(0)
-	cv2.imwrite('./results_imgs/{}'.format(img_name),img)
+	# cv2.imwrite('./results_imgs/{}'.format(img_name),img)
+if eval_files_list_path:
+	with open(os.path.join(output_dir, "predictions.pkl"), "wb") as f:
+		pickle.dump(predictions_dict, f)
+
+	with open(bbox_dict_path, "rb") as f:
+		bbox_coords_dict = pickle.load(f)
+
+	tp, fp, fn, precision, recall, f_score = get_metrics(bbox_coords_dict, predictions_dict, threshold=0.1)
+
+	result = "Precision: {}\nRecall: {}\nF_score: {}\nTP: {}, FP: {}, FN: {}".format(precision, recall, f_score, tp, fp,
+																					 fn)
+	print(result)
+
+	with open(os.path.join(output_dir, "results.txt", "w")) as f:
+		f.write(result)
+
+# print('Elapsed time = {}'.format(time.time() - st))
+

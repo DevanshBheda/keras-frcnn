@@ -76,13 +76,10 @@ def get_metrics(gt, preds, threshold=0.2):
                                 (pred_x1, pred_y1, pred_x2, pred_y2))
 
                 if iou_score >= threshold:
-                    #                     print('Predicted:{}, GroundTruth:{}'.format(pred_bbox,gt_bbox))
                     append_dict["found_in_gt"] = True
                     append_dict["matched_gt_bbox"] = gt_bbox
                     append_dict["iou"] = iou_score
-                    #                     image_with_results = cv2.putText(image_with_results,'TP',(pred_x1,pred_y1),font,fontScale,fontColor,lineType)
-                    #                     image_with_results = cv2.putText(image_with_results,str(round(iou_score,3)),(pred_x1,pred_y2),font,fontScale,fontColor,lineType)
-                    #                     got_gt = True
+
                     break
             #                 else:
             #                     if iou_score>0:
@@ -130,6 +127,8 @@ def predict(img_path, model, C, max_boxes=100):
     #     plt.imshow(pred_img)
     #     plt.show()
     return pred_img, predictions
+
+
 
 def evaluate_model(model, config, gt_images_dict, eval_images_list, images_folder_path, output_folder_path,
                    threshold=0.3, model_type="keras_frcnn", max_boxes=100):
