@@ -156,6 +156,8 @@ else:
 	img_names = sorted(os.listdir(img_path))
 
 predictions_dict = {}
+print("Starting to run the predictions for {} images".format(len(img_names)))
+
 
 for idx, img_name in enumerate(img_names):
 	try:
@@ -260,10 +262,15 @@ for idx, img_name in enumerate(img_names):
 		# cv2.imshow('img', img)
 		# cv2.waitKey(0)
 		# cv2.imwrite('./results_imgs/{}'.format(img_name),img)
+
 	except Exception as e:
 		print("Error with ", img_name)
 		print(e)
-		
+	if idx % 100 == 0:
+		print("{} images done".format(idx))
+
+print("Done with the predictions. Finding the stats now")
+
 if eval_files_list_path:
 	with open(os.path.join(output_dir, "predictions.pkl"), "wb") as f:
 		pickle.dump(predictions_dict, f)
